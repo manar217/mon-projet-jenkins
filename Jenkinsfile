@@ -1,45 +1,28 @@
 pipeline {
     agent any
-    tools {
-        maven 'Maven3'
-        jdk 'JDK21'
+    environment {
+        DOCKER_IMAGE = 'galaizar/mon-app:latest'
     }
     stages {
-        stage('Nettoyage') {
+        stage('Build Docker Image') {
             steps {
-                echo '🚀 Nettoyage du projet...'
-                sh 'mvn clean -Denforcer.skip=true'
+                bat 'docker build -t %DOCKER_IMAGE% .'
             }
         }
-        stage('Dépendances') {
+        stage('Push to Docker Hub') {
             steps {
-                echo '📦 Téléchargement des dépendances...'
-                sh 'mvn dependency:resolve -Denforcer.skip=true'
+                withCredentials([usernamePassword(
+                    credentialsId: 'docker-hub-credentials',
+                   
+                    usernameVariable: 'DOCKER_USER',
+                    passwordVariable: 'DOCKER_PASS'
+                )]) {
+                    bat '''
+                        echo %DOCKER_PASS% | docker login -u %DOCKER_USER% --password-stdin
+                        docker push %DOCKER_IMAGE%
+                    '''
+                }
             }
-        }
-        stage('Compilation') {
-            steps {
-                echo '🔨 Compilation du code...'
-                sh 'mvn compile -Denforcer.skip=true'
-            }
-        }
-        stage('Livrable') {
-            steps {
-                echo '📦 Construction du JAR...'
-                sh 'mvn package -Denforcer.skip=true -DskipTests'
-                archiveArtifacts artifacts: 'target/*.jar', fingerprint: true
-            }
-        }
-    }
-    post {
-        always {
-            echo '🏁 Pipeline terminé!'
-        }
-        success {
-            echo '🎉 SUCCÈS : Construction réussie!'
-        }
-        failure {
-            echo '❌ ÉCHEC : Construction échouée!'
         }
     }
 }
