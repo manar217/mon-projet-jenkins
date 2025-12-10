@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: springboot-service
+spec:
+  selector:
+    app: my-app          # DOIT correspondre au label du Deployment
+  type: NodePort
+  ports:
+    - port: 8080         # port du service dans le cluster
+      targetPort: 8080   # port du container (containerPort dans app-deployment.yaml)
+      nodePort: 30081    # nouveau NodePort, différent de 30080
