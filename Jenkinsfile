@@ -11,7 +11,7 @@ pipeline {
 
         stage('Checkout') {
             steps {
-                checkout scm
+                git branch: 'main', url: 'https://github.com/manar217/mon-projet-jenkins.git'
             }
         }
 
